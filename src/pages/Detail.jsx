@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { storage } from '../utils/storage';
-import { ArrowLeft, Heart, MessageSquare, Share2, Bookmark } from 'lucide-react';
+import { ArrowLeft, Heart, MessageSquare, Share2, Bookmark, Activity } from 'lucide-react';
 import Header from '../components/Header';
 
 const Detail = () => {
