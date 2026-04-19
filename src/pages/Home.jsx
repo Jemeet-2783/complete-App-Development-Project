@@ -2,27 +2,33 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { storage } from '../utils/storage';
-import { Heart, ChevronRight, Activity } from 'lucide-react';
+import { Heart, ChevronRight, Activity, RefreshCw } from 'lucide-react';
 import Header from '../components/Header';
 import BottomNav from '../components/BottomNav';
 
 const Home = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [favorites, setFavorites] = useState(storage.getFavorites());
   const navigate = useNavigate();
 
+  const fetchPosts = async (showRefresh = false) => {
+    if (showRefresh) setRefreshing(true);
+    else setLoading(true);
+    
+    try {
+      const data = await apiService.getPosts();
+      setPosts(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const data = await apiService.getPosts();
-        setPosts(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchPosts();
   }, []);
 
@@ -42,18 +48,31 @@ const Home = () => {
         <div style={{ 
           display: 'flex', 
           alignItems: 'center', 
-          gap: '12px', 
+          justifyContent: 'space-between',
           marginBottom: '24px',
           background: 'rgba(79, 70, 229, 0.05)',
           padding: '16px',
           borderRadius: 'var(--radius)',
           borderLeft: '4px solid var(--primary)'
         }}>
-          <Activity size={24} color="var(--primary)" />
-          <div>
-            <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '2px' }}>Latest Discoveries</h2>
-            <p style={{ fontSize: '13px' }}>Explore the top 15 trending topics from the API.</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Activity size={24} color="var(--primary)" />
+            <div>
+              <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '2px' }}>Latest Discoveries</h2>
+              <p style={{ fontSize: '13px' }}>Live API Feed Integration</p>
+            </div>
           </div>
+          <button 
+            onClick={() => fetchPosts(true)}
+            disabled={refreshing || loading}
+            style={{ 
+              background: 'none', border: 'none', cursor: 'pointer', 
+              color: 'var(--primary)', opacity: (refreshing || loading) ? 0.5 : 1,
+              animation: refreshing ? 'spin 1s linear infinite' : 'none'
+            }}
+          >
+            <RefreshCw size={20} />
+          </button>
         </div>
 
         {loading ? (
@@ -69,7 +88,7 @@ const Home = () => {
             <p style={{ marginTop: '16px', fontWeight: '500', color: 'var(--text-muted)' }}>Fetching live content...</p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gap: '16px' }}>
+          <div style={{ display: 'grid', gap: '16px', opacity: refreshing ? 0.6 : 1, transition: 'opacity 0.2s' }}>
             {posts.map(post => (
               <div 
                 key={post.id} 
